@@ -1,0 +1,153 @@
+## Global Variable
+@BaseUrl = http://127.0.0.1:8000
+
+### ─────────────────────────────────────────────────
+## Auth
+### ─────────────────────────────────────────────────
+
+### Register
+# @name PostRegister
+POST {{BaseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Tester",
+  "username": "tester",
+  "password": "tester123"
+}
+
+### Login
+# @name PostLogin
+POST {{BaseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "tester",
+  "password": "tester123"
+}
+
+> {%
+    client.global.set("authToken", response.body.data.authToken);
+    client.global.set("refreshToken", response.body.data.refreshToken);
+%}
+
+### Refresh Token
+# @name PostRefreshToken
+POST {{BaseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+{
+  "authToken": "{{authToken}}",
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+    client.global.set("authToken", response.body.data.authToken);
+    client.global.set("refreshToken", response.body.data.refreshToken);
+%}
+
+### Logout
+# @name PostLogout
+POST {{BaseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "authToken": "{{authToken}}"
+}
+
+### ─────────────────────────────────────────────────
+## Users
+### ─────────────────────────────────────────────────
+
+### Get My Profile
+# @name GetUserMe
+GET {{BaseUrl}}/users/me
+Authorization: Bearer {{authToken}}
+
+> {%
+    client.global.set("userId", response.body.data.user.id);
+%}
+
+### Update Profile
+# @name PutUserMe
+PUT {{BaseUrl}}/users/me
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Tester Update",
+  "username": "tester"
+}
+
+### Change Password
+# @name PutUserMePassword
+PUT {{BaseUrl}}/users/me/password
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "newPassword": "tester123",
+  "password": "tester123"
+}
+
+### ─────────────────────────────────────────────────
+## Books
+### ─────────────────────────────────────────────────
+
+### Get All Books (with pagination + search + filter)
+# @name GetBooks
+GET {{BaseUrl}}/books?search=&genre=&is_read=&page=1&perPage=10
+Authorization: Bearer {{authToken}}
+
+### Get Book Stats
+# @name GetBookStats
+GET {{BaseUrl}}/books/stats
+Authorization: Bearer {{authToken}}
+
+### Add Book
+# @name PostBook
+POST {{BaseUrl}}/books
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Laskar Pelangi",
+  "author": "Andrea Hirata",
+  "description": "Novel tentang perjuangan anak-anak Belitung dalam menggapai pendidikan.",
+  "genre": "Fiksi",
+  "isbn": "978-979-1073-07-5",
+  "publisher": "Bentang Pustaka",
+  "year": 2005,
+  "isRead": false
+}
+
+> {%
+    client.global.set("bookId", response.body.data.bookId);
+%}
+
+### Get Book By ID
+# @name GetBookById
+GET {{BaseUrl}}/books/{{bookId}}
+Authorization: Bearer {{authToken}}
+
+### Update Book
+# @name PutBook
+PUT {{BaseUrl}}/books/{{bookId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Laskar Pelangi (Updated)",
+  "author": "Andrea Hirata",
+  "description": "Novel tentang perjuangan anak-anak Belitung dalam menggapai pendidikan.",
+  "genre": "Fiksi",
+  "isbn": "978-979-1073-07-5",
+  "publisher": "Bentang Pustaka",
+  "year": 2005,
+  "isRead": true
+}
+
+### Delete Book
+# @name DeleteBook
+DELETE {{BaseUrl}}/books/{{bookId}}
+Authorization: Bearer {{authToken}}
