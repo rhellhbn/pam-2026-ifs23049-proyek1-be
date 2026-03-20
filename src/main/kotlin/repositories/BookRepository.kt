@@ -16,7 +16,7 @@ class BookRepository : IBookRepository {
         userId: String,
         search: String,
         isRead: Boolean?,
-        genre: String?
+        genre: String?,
     ): Op<Boolean> {
         val userUuid = UUID.fromString(userId)
         var op: Op<Boolean> = BookTable.userId eq userUuid
@@ -55,6 +55,15 @@ class BookRepository : IBookRepository {
             .map(::bookDAOToModel)
     }
 
+    override suspend fun countAll(
+        userId: String,
+        search: String,
+        isRead: Boolean?,
+        genre: String?,
+    ): Long = suspendTransaction {
+        BookDAO.find { buildFilter(userId, search, isRead, genre) }.count()
+    }
+
     override suspend fun getById(bookId: String): Book? = suspendTransaction {
         BookDAO.find { BookTable.id eq UUID.fromString(bookId) }
             .limit(1)
@@ -63,7 +72,7 @@ class BookRepository : IBookRepository {
     }
 
     override suspend fun create(book: Book): String = suspendTransaction {
-        val dao = BookDAO.new {
+        BookDAO.new {
             userId      = UUID.fromString(book.userId)
             title       = book.title
             author      = book.author
@@ -76,8 +85,7 @@ class BookRepository : IBookRepository {
             isRead      = book.isRead
             createdAt   = book.createdAt
             updatedAt   = book.updatedAt
-        }
-        dao.id.value.toString()
+        }.id.value.toString()
     }
 
     override suspend fun update(userId: String, bookId: String, newBook: Book): Boolean = suspendTransaction {
@@ -102,27 +110,17 @@ class BookRepository : IBookRepository {
     }
 
     override suspend fun delete(userId: String, bookId: String): Boolean = suspendTransaction {
-        val rows = BookTable.deleteWhere {
+        BookTable.deleteWhere {
             (BookTable.id eq UUID.fromString(bookId)) and
             (BookTable.userId eq UUID.fromString(userId))
-        }
-        rows >= 1
+        } >= 1
     }
 
     override suspend fun getStats(userId: String): Map<String, Long> = suspendTransaction {
         val userUuid = UUID.fromString(userId)
-        val total    = BookDAO.find { BookTable.userId eq userUuid }.count()
-        val read     = BookDAO.find { (BookTable.userId eq userUuid) and (BookTable.isRead eq true) }.count()
-        val unread   = BookDAO.find { (BookTable.userId eq userUuid) and (BookTable.isRead eq false) }.count()
+        val total  = BookDAO.find { BookTable.userId eq userUuid }.count()
+        val read   = BookDAO.find { (BookTable.userId eq userUuid) and (BookTable.isRead eq true) }.count()
+        val unread = BookDAO.find { (BookTable.userId eq userUuid) and (BookTable.isRead eq false) }.count()
         mapOf("total" to total, "read" to read, "unread" to unread)
-    }
-
-    override suspend fun countAll(
-        userId: String,
-        search: String,
-        isRead: Boolean?,
-        genre: String?
-    ): Long = suspendTransaction {
-        BookDAO.find { buildFilter(userId, search, isRead, genre) }.count()
     }
 }

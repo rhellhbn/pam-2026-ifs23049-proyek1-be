@@ -7,10 +7,21 @@ import org.delcom.services.UserService
 import org.koin.dsl.module
 
 fun appModule(jwtSecret: String) = module {
-    single<IUserRepository>         { UserRepository() }
-    single                          { UserService(get(), get()) }
+    // User Repository
+    single<IUserRepository> { UserRepository() }
+
+    // User Service
+    single { UserService(get(), get()) }
+
+    // Refresh Token Repository
     single<IRefreshTokenRepository> { RefreshTokenRepository() }
-    single                          { AuthService(jwtSecret, get(), get()) }
-    single<IBookRepository>         { BookRepository() }
-    single                          { BookService(get(), get()) }
+
+    // Auth Service
+    single { AuthService(jwtSecret, get(), get()) }
+
+    // Book Repository
+    single<IBookRepository> { BookRepository() }
+
+    // Book Service
+    single { BookService(get(), get()) }
 }

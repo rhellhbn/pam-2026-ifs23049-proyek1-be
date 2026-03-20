@@ -9,16 +9,16 @@ import java.util.UUID
 class BookDAO(id: EntityID<UUID>) : Entity<UUID>(id) {
     companion object : EntityClass<UUID, BookDAO>(BookTable)
 
-    var userId    by BookTable.userId
-    var title     by BookTable.title
-    var author    by BookTable.author
+    var userId      by BookTable.userId
+    var title       by BookTable.title
+    var author      by BookTable.author
     var description by BookTable.description
-    var genre     by BookTable.genre
-    var isbn      by BookTable.isbn
-    var publisher by BookTable.publisher
-    var year      by BookTable.year
-    var cover     by BookTable.cover
-    var isRead    by BookTable.isRead
-    var createdAt by BookTable.createdAt
-    var updatedAt by BookTable.updatedAt
+    var genre       by BookTable.genre
+    var isbn        by BookTable.isbn
+    var publisher   by BookTable.publisher
+    var year        by BookTable.year
+    var cover       by BookTable.cover
+    var isRead      by BookTable.isRead
+    var createdAt   by BookTable.createdAt
+    var updatedAt   by BookTable.updatedAt
 }

@@ -17,22 +17,21 @@ import org.delcom.helpers.ValidatorHelper
 import org.delcom.repositories.IBookRepository
 import org.delcom.repositories.IUserRepository
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 class BookService(
     private val userRepo: IUserRepository,
-    private val bookRepo: IBookRepository
+    private val bookRepo: IBookRepository,
 ) {
-
-    // ─── GET ALL (dengan pagination, search, filter) ──────────────────────────
+    // Ambil semua buku (search + filter + pagination)
     suspend fun getAll(call: ApplicationCall) {
-        val user     = ServiceHelper.getAuthUser(call, userRepo)
-        val search   = call.request.queryParameters["search"] ?: ""
-        val isReadP  = call.request.queryParameters["is_read"]
-        val isRead   = when (isReadP) { "1","true" -> true; "0","false" -> false; else -> null }
-        val genre    = call.request.queryParameters["genre"]
-        val page     = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-        val perPage  = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
+        val user    = ServiceHelper.getAuthUser(call, userRepo)
+        val search  = call.request.queryParameters["search"] ?: ""
+        val isReadP = call.request.queryParameters["is_read"]
+        val isRead  = when (isReadP) { "1","true" -> true; "0","false" -> false; else -> null }
+        val genre   = call.request.queryParameters["genre"]
+        val page    = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+        val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
         val books = bookRepo.getAll(user.id, search, isRead, genre, page, perPage)
         val total = bookRepo.countAll(user.id, search, isRead, genre)
@@ -41,7 +40,14 @@ class BookService(
             mapOf("books" to books, "total" to total, "page" to page, "perPage" to perPage)))
     }
 
-    // ─── GET BY ID ────────────────────────────────────────────────────────────
+    // Ambil statistik buku
+    suspend fun getStats(call: ApplicationCall) {
+        val user  = ServiceHelper.getAuthUser(call, userRepo)
+        val stats = bookRepo.getStats(user.id)
+        call.respond(DataResponse("success", "Berhasil mengambil statistik buku", stats))
+    }
+
+    // Ambil buku by ID
     suspend fun getById(call: ApplicationCall) {
         val bookId = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val user   = ServiceHelper.getAuthUser(call, userRepo)
@@ -50,45 +56,46 @@ class BookService(
         call.respond(DataResponse("success", "Berhasil mengambil data buku", mapOf("book" to book)))
     }
 
-    // ─── POST ─────────────────────────────────────────────────────────────────
+    // Tambah buku baru
     suspend fun post(call: ApplicationCall) {
         val user    = ServiceHelper.getAuthUser(call, userRepo)
         val request = call.receive<BookRequest>()
         request.userId = user.id
 
-        val v = ValidatorHelper(request.toMap())
-        v.required("title",       "Judul buku tidak boleh kosong")
-        v.required("author",      "Penulis tidak boleh kosong")
-        v.required("description", "Deskripsi tidak boleh kosong")
-        v.validate()
+        val validator = ValidatorHelper(request.toMap())
+        validator.required("title",       "Judul buku tidak boleh kosong")
+        validator.required("author",      "Penulis tidak boleh kosong")
+        validator.required("description", "Deskripsi tidak boleh kosong")
+        validator.validate()
 
         val bookId = bookRepo.create(request.toEntity())
         call.respond(DataResponse("success", "Berhasil menambahkan buku", mapOf("bookId" to bookId)))
     }
 
-    // ─── PUT ──────────────────────────────────────────────────────────────────
+    // Update buku
     suspend fun put(call: ApplicationCall) {
         val bookId  = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val user    = ServiceHelper.getAuthUser(call, userRepo)
         val request = call.receive<BookRequest>()
         request.userId = user.id
 
-        val v = ValidatorHelper(request.toMap())
-        v.required("title",       "Judul buku tidak boleh kosong")
-        v.required("author",      "Penulis tidak boleh kosong")
-        v.required("description", "Deskripsi tidak boleh kosong")
-        v.validate()
+        val validator = ValidatorHelper(request.toMap())
+        validator.required("title",       "Judul buku tidak boleh kosong")
+        validator.required("author",      "Penulis tidak boleh kosong")
+        validator.required("description", "Deskripsi tidak boleh kosong")
+        validator.validate()
 
         val old = bookRepo.getById(bookId)
         if (old == null || old.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
         request.cover = old.cover
 
-        val ok = bookRepo.update(user.id, bookId, request.toEntity())
-        if (!ok) throw AppException(400, "Gagal memperbarui data buku!")
+        if (!bookRepo.update(user.id, bookId, request.toEntity()))
+            throw AppException(400, "Gagal memperbarui data buku!")
+
         call.respond(DataResponse("success", "Berhasil mengubah data buku", null))
     }
 
-    // ─── PUT COVER ────────────────────────────────────────────────────────────
+    // Update cover buku
     suspend fun putCover(call: ApplicationCall) {
         val bookId  = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val user    = ServiceHelper.getAuthUser(call, userRepo)
@@ -100,8 +107,7 @@ class BookService(
                 is PartData.FileItem -> {
                     val ext = part.originalFileName?.substringAfterLast('.', "")
                         ?.let { if (it.isNotEmpty()) ".$it" else "" } ?: ""
-                    val fileName = UUID.randomUUID().toString() + ext
-                    val filePath = "uploads/books/$fileName"
+                    val filePath = "uploads/books/${UUID.randomUUID()}$ext"
                     withContext(Dispatchers.IO) {
                         val file = File(filePath)
                         file.parentFile.mkdirs()
@@ -120,44 +126,31 @@ class BookService(
         val old = bookRepo.getById(bookId)
         if (old == null || old.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
 
-        request.title       = old.title
-        request.author      = old.author
-        request.description = old.description
-        request.genre       = old.genre
-        request.isbn        = old.isbn
-        request.publisher   = old.publisher
-        request.year        = old.year
-        request.isRead      = old.isRead
+        request.title = old.title; request.author = old.author
+        request.description = old.description; request.genre = old.genre
+        request.isbn = old.isbn; request.publisher = old.publisher
+        request.year = old.year; request.isRead = old.isRead
 
-        val ok = bookRepo.update(user.id, bookId, request.toEntity())
-        if (!ok) throw AppException(400, "Gagal memperbarui cover buku!")
+        if (!bookRepo.update(user.id, bookId, request.toEntity()))
+            throw AppException(400, "Gagal memperbarui cover buku!")
 
-        if (old.cover != null) {
-            val oldFile = File(old.cover!!)
-            if (oldFile.exists()) oldFile.delete()
-        }
-
+        old.cover?.let { if (File(it).exists()) File(it).delete() }
         call.respond(DataResponse("success", "Berhasil mengubah cover buku", null))
     }
 
-    // ─── DELETE ───────────────────────────────────────────────────────────────
+    // Hapus buku
     suspend fun delete(call: ApplicationCall) {
         val bookId = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val user   = ServiceHelper.getAuthUser(call, userRepo)
         val old    = bookRepo.getById(bookId)
         if (old == null || old.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
 
-        val ok = bookRepo.delete(user.id, bookId)
-        if (!ok) throw AppException(400, "Gagal menghapus data buku!")
-
-        old.cover?.let { coverPath ->
-            val f = File(coverPath)
-            if (f.exists()) f.delete()
-        }
+        if (!bookRepo.delete(user.id, bookId)) throw AppException(400, "Gagal menghapus data buku!")
+        old.cover?.let { if (File(it).exists()) File(it).delete() }
         call.respond(DataResponse("success", "Berhasil menghapus buku", null))
     }
 
-    // ─── GET COVER ────────────────────────────────────────────────────────────
+    // Ambil cover buku (image)
     suspend fun getCover(call: ApplicationCall) {
         val bookId = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val book   = bookRepo.getById(bookId) ?: return call.respond(HttpStatusCode.NotFound)
@@ -165,12 +158,5 @@ class BookService(
         val file = File(book.cover!!)
         if (!file.exists()) throw AppException(404, "Cover buku tidak tersedia")
         call.respondFile(file)
-    }
-
-    // ─── GET STATS ────────────────────────────────────────────────────────────
-    suspend fun getStats(call: ApplicationCall) {
-        val user  = ServiceHelper.getAuthUser(call, userRepo)
-        val stats = bookRepo.getStats(user.id)
-        call.respond(DataResponse("success", "Berhasil mengambil statistik buku", stats))
     }
 }

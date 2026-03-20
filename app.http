@@ -1,29 +1,30 @@
-## Global Variable
+## Global Variabel
+#@BaseUrl = https://pam-2026-p5-ifs23001-be.delcom.org:8080
 @BaseUrl = http://127.0.0.1:8000
 
-### ─────────────────────────────────────────────────
+### ---------------------------------------
 ## Auth
-### ─────────────────────────────────────────────────
+### ---------------------------------------
 
-### Register
+### Melakukan pendaftaran
 # @name PostRegister
 POST {{BaseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "name": "Tester",
-  "username": "tester",
-  "password": "tester123"
+  "name": "Rahel",
+  "username": "rahelhbn",
+  "password": "rahelcantik123"
 }
 
-### Login
+### Masuk ke layanan
 # @name PostLogin
 POST {{BaseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "tester",
-  "password": "tester123"
+  "username": "rahelhbn",
+  "password": "rahelcantik123"
 }
 
 > {%
@@ -31,7 +32,16 @@ Content-Type: application/json
     client.global.set("refreshToken", response.body.data.refreshToken);
 %}
 
-### Refresh Token
+### Keluar dari layanan (skip run)
+# @name PostLogout
+POST {{BaseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "authToken": "{{authToken}}"
+}
+
+### Masuk ke layanan
 # @name PostRefreshToken
 POST {{BaseUrl}}/auth/refresh-token
 Content-Type: application/json
@@ -46,29 +56,21 @@ Content-Type: application/json
     client.global.set("refreshToken", response.body.data.refreshToken);
 %}
 
-### Logout
-# @name PostLogout
-POST {{BaseUrl}}/auth/logout
-Content-Type: application/json
-
-{
-  "authToken": "{{authToken}}"
-}
-
-### ─────────────────────────────────────────────────
+### ---------------------------------------
 ## Users
-### ─────────────────────────────────────────────────
+### ---------------------------------------
 
-### Get My Profile
+### Mengambil informasi akun
 # @name GetUserMe
 GET {{BaseUrl}}/users/me
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 > {%
     client.global.set("userId", response.body.data.user.id);
 %}
 
-### Update Profile
+### Mengubah informasi akun
 # @name PutUserMe
 PUT {{BaseUrl}}/users/me
 Authorization: Bearer {{authToken}}
@@ -79,75 +81,102 @@ Content-Type: application/json
   "username": "tester"
 }
 
-### Change Password
+### Mengubah kata sandi akun
 # @name PutUserMePassword
 PUT {{BaseUrl}}/users/me/password
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "newPassword": "tester123",
-  "password": "tester123"
+  "newPassword": "tester",
+  "password": "tester"
 }
 
-### ─────────────────────────────────────────────────
-## Books
-### ─────────────────────────────────────────────────
-
-### Get All Books (with pagination + search + filter)
-# @name GetBooks
-GET {{BaseUrl}}/books?search=&genre=&is_read=&page=1&perPage=10
+### Mengubah photo profile
+# @name PutUserMePhoto
+PUT {{BaseUrl}}/users/me/photo
 Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
 
-### Get Book Stats
-# @name GetBookStats
-GET {{BaseUrl}}/books/stats
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="example.png"
+Content-Type: image/png
+
+< ./uploads/examples/me.png
+--WebAppBoundary--
+
+### Mengambil data tumbuhan berdasarkan id-nya
+@userId = 00ed9d33-61b0-48b7-a32a-6510af028731
+
+# @name GetMyPhoto
+GET {{BaseUrl}}/images/users/{{userId}}
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
-### Add Book
-# @name PostBook
-POST {{BaseUrl}}/books
+### ---------------------------------------
+## Todos
+### ---------------------------------------
+
+### Mengambil semua data todo user saat ini
+# @name GetTodos
+GET {{BaseUrl}}/todos?search=
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### Menambahkan todo
+# @name PostTodos
+POST {{BaseUrl}}/todos
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "title": "Laskar Pelangi",
-  "author": "Andrea Hirata",
-  "description": "Novel tentang perjuangan anak-anak Belitung dalam menggapai pendidikan.",
-  "genre": "Fiksi",
-  "isbn": "978-979-1073-07-5",
-  "publisher": "Bentang Pustaka",
-  "year": 2005,
-  "isRead": false
+  "title": "Judul Todo",
+  "description": "Deskripsi Todo"
 }
 
 > {%
-    client.global.set("bookId", response.body.data.bookId);
+    client.global.set("todoId", response.body.data.todoId);
 %}
 
-### Get Book By ID
-# @name GetBookById
-GET {{BaseUrl}}/books/{{bookId}}
+### Mengambil todo dengan id
+# @name GetTodoById
+GET {{BaseUrl}}/todos/{{todoId}}
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
-### Update Book
-# @name PutBook
-PUT {{BaseUrl}}/books/{{bookId}}
+### Mengubah todo
+# @name PutTodo
+PUT {{BaseUrl}}/todos/{{todoId}}
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "title": "Laskar Pelangi (Updated)",
-  "author": "Andrea Hirata",
-  "description": "Novel tentang perjuangan anak-anak Belitung dalam menggapai pendidikan.",
-  "genre": "Fiksi",
-  "isbn": "978-979-1073-07-5",
-  "publisher": "Bentang Pustaka",
-  "year": 2005,
-  "isRead": true
+  "title": "Judul Todo",
+  "description": "Deskripsi Todo",
+  "isDone": true
 }
 
-### Delete Book
-# @name DeleteBook
-DELETE {{BaseUrl}}/books/{{bookId}}
+### Mengubah cover todo
+# @name PutTodoCover
+PUT {{BaseUrl}}/todos/{{todoId}}/cover
 Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="example.png"
+Content-Type: image/png
+
+< ./uploads/examples/me.png
+--WebAppBoundary--
+
+### Mengambil cover todo
+# @name GetTodoCover
+GET {{BaseUrl}}/images/todos/{{todoId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### Menghapus todo
+# @name DeleteTodo
+DELETE {{BaseUrl}}/todos/{{todoId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json

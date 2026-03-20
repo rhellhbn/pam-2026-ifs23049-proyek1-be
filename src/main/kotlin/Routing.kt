@@ -42,7 +42,7 @@ fun Application.configureRouting() {
 
     routing {
         get("/") {
-            call.respondText("API Perpustakaan berjalan. Dibuat dengan Ktor.")
+            call.respondText("API Perpustakaan berjalan. Dibuat oleh Rahel Hasibuan.")
         }
 
         // ─── Auth ─────────────────────────────────────────────────────────────
@@ -56,28 +56,28 @@ fun Application.configureRouting() {
         authenticate(JWTConstants.NAME) {
             // ─── Users ────────────────────────────────────────────────────────
             route("/users") {
-                get("/me")           { userService.getMe(call) }
-                put("/me")           { userService.putMe(call) }
-                put("/me/password")  { userService.putMyPassword(call) }
-                put("/me/photo")     { userService.putMyPhoto(call) }
+                get("/me")          { userService.getMe(call) }
+                put("/me")          { userService.putMe(call) }
+                put("/me/password") { userService.putMyPassword(call) }
+                put("/me/photo")    { userService.putMyPhoto(call) }
             }
 
             // ─── Books ────────────────────────────────────────────────────────
             route("/books") {
-                get               { bookService.getAll(call) }
-                get("/stats")     { bookService.getStats(call) }
-                post              { bookService.post(call) }
-                get("/{id}")      { bookService.getById(call) }
-                put("/{id}")      { bookService.put(call) }
-                put("/{id}/cover"){ bookService.putCover(call) }
-                delete("/{id}")   { bookService.delete(call) }
+                get                { bookService.getAll(call) }
+                get("/stats")      { bookService.getStats(call) }
+                post               { bookService.post(call) }
+                get("/{id}")       { bookService.getById(call) }
+                put("/{id}")       { bookService.put(call) }
+                put("/{id}/cover") { bookService.putCover(call) }
+                delete("/{id}")    { bookService.delete(call) }
             }
         }
 
-        // ─── Static images ────────────────────────────────────────────────────
+        // ─── Images ───────────────────────────────────────────────────────────
         route("/images") {
-            get("users/{id}")  { userService.getPhoto(call) }
-            get("books/{id}")  { bookService.getCover(call) }
+            get("users/{id}") { userService.getPhoto(call) }
+            get("books/{id}") { bookService.getCover(call) }
         }
     }
 }
