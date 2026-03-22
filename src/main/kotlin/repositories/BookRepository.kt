@@ -84,8 +84,8 @@ class BookRepository : IBookRepository {
             year        = book.year
             cover       = book.cover
             isRead      = book.isRead
-            // createdAt dan updatedAt di DAO tetap Instant
-            // tidak perlu assign, pakai default dari database
+            createdAt   = Clock.System.now()  // ← wajib diisi
+            updatedAt   = Clock.System.now()  // ← wajib diisi
         }.id.value.toString()
     }
 
@@ -105,7 +105,7 @@ class BookRepository : IBookRepository {
             dao.year        = newBook.year
             dao.cover       = newBook.cover
             dao.isRead      = newBook.isRead
-            dao.updatedAt   = Clock.System.now()  // ← tetap Instant karena DAO masih Instant
+            dao.updatedAt   = Clock.System.now()
             true
         } else false
     }
