@@ -1,5 +1,8 @@
 package org.delcom.data
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,6 +12,6 @@ data class UserResponse(
     var username: String = "",
     var photo: String? = null,
     var bio: String? = null,
-    var createdAt: String = "",  // String bukan Instant
-    var updatedAt: String = "",  // String bukan Instant
+    @Contextual var createdAt: Instant = Clock.System.now(),
+    @Contextual var updatedAt: Instant = Clock.System.now(),
 )

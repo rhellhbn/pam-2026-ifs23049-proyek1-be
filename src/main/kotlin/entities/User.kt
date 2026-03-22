@@ -1,6 +1,8 @@
 package org.delcom.entities
 
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -12,7 +14,6 @@ data class User(
     var password: String,
     var photo: String? = null,
     var bio: String? = null,
-    // Ubah dari Instant ke String
-    val createdAt: String = Clock.System.now().toString(),
-    var updatedAt: String = Clock.System.now().toString(),
+    @Contextual val createdAt: Instant = Clock.System.now(),
+    @Contextual var updatedAt: Instant = Clock.System.now(),
 )

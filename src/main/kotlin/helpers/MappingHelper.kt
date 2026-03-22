@@ -14,22 +14,22 @@ suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
 
 fun userDAOToModel(dao: UserDAO) = User(
-    dao.id.value.toString(),
-    dao.name,
-    dao.username,
-    dao.password,
-    dao.photo,
-    dao.bio,
-    dao.createdAt.toString(),  // convert Instant ke String
-    dao.updatedAt.toString(),  // convert Instant ke String
+    id        = dao.id.value.toString(),
+    name      = dao.name,
+    username  = dao.username,
+    password  = dao.password,
+    photo     = dao.photo,
+    bio       = dao.bio,
+    createdAt = dao.createdAt,
+    updatedAt = dao.updatedAt
 )
 
 fun refreshTokenDAOToModel(dao: RefreshTokenDAO) = RefreshToken(
-    dao.id.value.toString(),
-    dao.userId.toString(),
-    dao.refreshToken,
-    dao.authToken,
-    dao.createdAt,
+    id           = dao.id.value.toString(),
+    userId       = dao.userId.toString(),
+    refreshToken = dao.refreshToken,
+    authToken    = dao.authToken,
+    createdAt    = dao.createdAt,
 )
 
 fun bookDAOToModel(dao: BookDAO) = Book(
@@ -44,6 +44,6 @@ fun bookDAOToModel(dao: BookDAO) = Book(
     year        = dao.year,
     cover       = dao.cover,
     isRead      = dao.isRead,
-    createdAt   = dao.createdAt.toString(),  // convert Instant ke String
-    updatedAt   = dao.updatedAt.toString(),  // convert Instant ke String
+    createdAt   = dao.createdAt,
+    updatedAt   = dao.updatedAt,
 )
