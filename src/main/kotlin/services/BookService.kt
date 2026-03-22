@@ -11,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.delcom.data.AppException
 import org.delcom.data.BookRequest
+import org.delcom.data.BookResponse
 import org.delcom.data.DataResponse
+import org.delcom.entities.Book
 import org.delcom.helpers.ServiceHelper
 import org.delcom.helpers.ValidatorHelper
 import org.delcom.repositories.IBookRepository
@@ -23,7 +25,24 @@ class BookService(
     private val userRepo: IUserRepository,
     private val bookRepo: IBookRepository,
 ) {
-    // Ambil semua buku (search + filter + pagination)
+    // Helper: convert Book entity ke BookResponse
+    private fun Book.toResponse() = BookResponse(
+        id          = id,
+        userId      = userId,
+        title       = title,
+        author      = author,
+        description = description,
+        genre       = genre,
+        isbn        = isbn,
+        publisher   = publisher,
+        year        = year,
+        isRead      = isRead,
+        cover       = cover,
+        createdAt   = createdAt,
+        updatedAt   = updatedAt,
+    )
+
+    // Ambil semua buku
     suspend fun getAll(call: ApplicationCall) {
         val user    = ServiceHelper.getAuthUser(call, userRepo)
         val search  = call.request.queryParameters["search"] ?: ""
@@ -34,6 +53,7 @@ class BookService(
         val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
         val books = bookRepo.getAll(user.id, search, isRead, genre, page, perPage)
+            .map { it.toResponse() }
         val total = bookRepo.countAll(user.id, search, isRead, genre)
 
         call.respond(DataResponse("success", "Berhasil mengambil daftar buku",
@@ -53,7 +73,8 @@ class BookService(
         val user   = ServiceHelper.getAuthUser(call, userRepo)
         val book   = bookRepo.getById(bookId)
         if (book == null || book.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
-        call.respond(DataResponse("success", "Berhasil mengambil data buku", mapOf("book" to book)))
+        call.respond(DataResponse("success", "Berhasil mengambil data buku",
+            mapOf("book" to book.toResponse())))
     }
 
     // Tambah buku baru
@@ -69,7 +90,8 @@ class BookService(
         validator.validate()
 
         val bookId = bookRepo.create(request.toEntity())
-        call.respond(DataResponse("success", "Berhasil menambahkan buku", mapOf("bookId" to bookId)))
+        call.respond(DataResponse("success", "Berhasil menambahkan buku",
+            mapOf("bookId" to bookId)))
     }
 
     // Update buku
@@ -126,10 +148,14 @@ class BookService(
         val old = bookRepo.getById(bookId)
         if (old == null || old.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
 
-        request.title = old.title; request.author = old.author
-        request.description = old.description; request.genre = old.genre
-        request.isbn = old.isbn; request.publisher = old.publisher
-        request.year = old.year; request.isRead = old.isRead
+        request.title = old.title
+        request.author = old.author
+        request.description = old.description
+        request.genre = old.genre
+        request.isbn = old.isbn
+        request.publisher = old.publisher
+        request.year = old.year
+        request.isRead = old.isRead
 
         if (!bookRepo.update(user.id, bookId, request.toEntity()))
             throw AppException(400, "Gagal memperbarui cover buku!")
@@ -150,7 +176,7 @@ class BookService(
         call.respond(DataResponse("success", "Berhasil menghapus buku", null))
     }
 
-    // Ambil cover buku (image)
+    // Ambil cover buku
     suspend fun getCover(call: ApplicationCall) {
         val bookId = call.parameters["id"] ?: throw AppException(400, "ID buku tidak valid!")
         val book   = bookRepo.getById(bookId) ?: return call.respond(HttpStatusCode.NotFound)
