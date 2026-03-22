@@ -20,8 +20,8 @@ fun userDAOToModel(dao: UserDAO) = User(
     dao.password,
     dao.photo,
     dao.bio,
-    dao.createdAt,
-    dao.updatedAt
+    dao.createdAt.toString(),  // convert Instant ke String
+    dao.updatedAt.toString(),  // convert Instant ke String
 )
 
 fun refreshTokenDAOToModel(dao: RefreshTokenDAO) = RefreshToken(
@@ -44,6 +44,6 @@ fun bookDAOToModel(dao: BookDAO) = Book(
     year        = dao.year,
     cover       = dao.cover,
     isRead      = dao.isRead,
-    createdAt   = dao.createdAt,
-    updatedAt   = dao.updatedAt,
+    createdAt   = dao.createdAt.toString(),  // convert Instant ke String
+    updatedAt   = dao.updatedAt.toString(),  // convert Instant ke String
 )

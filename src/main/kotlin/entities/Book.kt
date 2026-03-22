@@ -1,8 +1,6 @@
 package org.delcom.entities
 
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -19,9 +17,7 @@ data class Book(
     var year: Int? = null,
     var cover: String? = null,
     var isRead: Boolean = false,
-
-    @Contextual
-    val createdAt: Instant = Clock.System.now(),
-    @Contextual
-    var updatedAt: Instant = Clock.System.now(),
+    // Ubah dari Instant ke String
+    val createdAt: String = Clock.System.now().toString(),
+    var updatedAt: String = Clock.System.now().toString(),
 )
