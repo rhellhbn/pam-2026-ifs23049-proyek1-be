@@ -1,5 +1,6 @@
 package org.delcom.repositories
 
+import kotlinx.datetime.Clock
 import org.delcom.dao.BookDAO
 import org.delcom.entities.Book
 import org.delcom.helpers.bookDAOToModel
@@ -23,9 +24,9 @@ class BookRepository : IBookRepository {
 
         if (search.isNotBlank()) {
             op = op and (
-                (BookTable.title.lowerCase() like "%${search.lowercase()}%") or
-                (BookTable.author.lowerCase() like "%${search.lowercase()}%")
-            )
+                    (BookTable.title.lowerCase() like "%${search.lowercase()}%") or
+                            (BookTable.author.lowerCase() like "%${search.lowercase()}%")
+                    )
         }
         if (isRead != null) {
             op = op and (BookTable.isRead eq isRead)
@@ -83,15 +84,15 @@ class BookRepository : IBookRepository {
             year        = book.year
             cover       = book.cover
             isRead      = book.isRead
-            createdAt   = book.createdAt
-            updatedAt   = book.updatedAt
+            // createdAt dan updatedAt di DAO tetap Instant
+            // tidak perlu assign, pakai default dari database
         }.id.value.toString()
     }
 
     override suspend fun update(userId: String, bookId: String, newBook: Book): Boolean = suspendTransaction {
         val dao = BookDAO.find {
             (BookTable.id eq UUID.fromString(bookId)) and
-            (BookTable.userId eq UUID.fromString(userId))
+                    (BookTable.userId eq UUID.fromString(userId))
         }.limit(1).firstOrNull()
 
         if (dao != null) {
@@ -104,7 +105,7 @@ class BookRepository : IBookRepository {
             dao.year        = newBook.year
             dao.cover       = newBook.cover
             dao.isRead      = newBook.isRead
-            dao.updatedAt   = newBook.updatedAt
+            dao.updatedAt   = Clock.System.now()  // ← tetap Instant karena DAO masih Instant
             true
         } else false
     }
@@ -112,7 +113,7 @@ class BookRepository : IBookRepository {
     override suspend fun delete(userId: String, bookId: String): Boolean = suspendTransaction {
         BookTable.deleteWhere {
             (BookTable.id eq UUID.fromString(bookId)) and
-            (BookTable.userId eq UUID.fromString(userId))
+                    (BookTable.userId eq UUID.fromString(userId))
         } >= 1
     }
 

@@ -44,6 +44,6 @@ fun bookDAOToModel(dao: BookDAO) = Book(
     year        = dao.year,
     cover       = dao.cover,
     isRead      = dao.isRead,
-    createdAt   = dao.createdAt,
-    updatedAt   = dao.updatedAt,
+    createdAt   = dao.createdAt.toString(),  // ← tambah .toString()
+    updatedAt   = dao.updatedAt.toString(),  // ← tambah .toString()
 )
