@@ -35,13 +35,13 @@ class UserService(
             "Berhasil mengambil informasi akun saya",
             mapOf(
                 "user" to UserResponse(
-                    id = user.id,
-                    name = user.name,
-                    username = user.username,
-                    photo = user.photo,
-                    bio = user.bio,
-                    createdAt = user.createdAt,
-                    updatedAt = user.updatedAt,
+                    id        = user.id,
+                    name      = user.name,
+                    username  = user.username,
+                    photo     = user.photo,
+                    bio       = user.bio,
+                    createdAt = user.createdAt.toString(),  // ← toString()
+                    updatedAt = user.updatedAt.toString(),  // ← toString()
                 ),
             )
         )
