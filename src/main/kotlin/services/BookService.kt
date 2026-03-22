@@ -24,21 +24,21 @@ class BookService(
     private val userRepo: IUserRepository,
     private val bookRepo: IBookRepository,
 ) {
-    // Helper: convert Book entity ke BookResponse
-    private fun Book.toResponse() = BookResponse(
-        id          = id,
-        userId      = userId,
-        title       = title,
-        author      = author,
-        description = description,
-        genre       = genre,
-        isbn        = isbn,
-        publisher   = publisher,
-        year        = year,
-        isRead      = isRead,
-        cover       = cover,
-        createdAt   = createdAt,
-        updatedAt   = updatedAt,
+    // Helper: convert Book ke Map dengan tanggal sebagai String
+    private fun Book.toMap(): Map<String, Any?> = mapOf(
+        "id"          to id,
+        "userId"      to userId,
+        "title"       to title,
+        "author"      to author,
+        "description" to description,
+        "genre"       to genre,
+        "isbn"        to isbn,
+        "publisher"   to publisher,
+        "year"        to year,
+        "isRead"      to isRead,
+        "cover"       to cover,
+        "createdAt"   to createdAt.toString(),
+        "updatedAt"   to updatedAt.toString()
     )
 
     // Ambil semua buku
@@ -52,11 +52,19 @@ class BookService(
         val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
         val books = bookRepo.getAll(user.id, search, isRead, genre, page, perPage)
-            .map { it.toResponse() }
+            .map { it.toMap() }
         val total = bookRepo.countAll(user.id, search, isRead, genre)
 
-        call.respond(DataResponse("success", "Berhasil mengambil daftar buku",
-            mapOf("books" to books, "total" to total, "page" to page, "perPage" to perPage)))
+        call.respond(DataResponse(
+            "success",
+            "Berhasil mengambil daftar buku",
+            mapOf(
+                "books"   to books,
+                "total"   to total,
+                "page"    to page,
+                "perPage" to perPage
+            )
+        ))
     }
 
     // Ambil statistik buku
@@ -72,8 +80,11 @@ class BookService(
         val user   = ServiceHelper.getAuthUser(call, userRepo)
         val book   = bookRepo.getById(bookId)
         if (book == null || book.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
-        call.respond(DataResponse("success", "Berhasil mengambil data buku",
-            mapOf("book" to book.toResponse())))
+        call.respond(DataResponse(
+            "success",
+            "Berhasil mengambil data buku",
+            mapOf("book" to book.toMap())
+        ))
     }
 
     // Tambah buku baru
@@ -89,8 +100,11 @@ class BookService(
         validator.validate()
 
         val bookId = bookRepo.create(request.toEntity())
-        call.respond(DataResponse("success", "Berhasil menambahkan buku",
-            mapOf("bookId" to bookId)))
+        call.respond(DataResponse(
+            "success",
+            "Berhasil menambahkan buku",
+            mapOf("bookId" to bookId)
+        ))
     }
 
     // Update buku
@@ -147,14 +161,14 @@ class BookService(
         val old = bookRepo.getById(bookId)
         if (old == null || old.userId != user.id) throw AppException(404, "Data buku tidak tersedia!")
 
-        request.title = old.title
-        request.author = old.author
+        request.title       = old.title
+        request.author      = old.author
         request.description = old.description
-        request.genre = old.genre
-        request.isbn = old.isbn
-        request.publisher = old.publisher
-        request.year = old.year
-        request.isRead = old.isRead
+        request.genre       = old.genre
+        request.isbn        = old.isbn
+        request.publisher   = old.publisher
+        request.year        = old.year
+        request.isRead      = old.isRead
 
         if (!bookRepo.update(user.id, bookId, request.toEntity()))
             throw AppException(400, "Gagal memperbarui cover buku!")
