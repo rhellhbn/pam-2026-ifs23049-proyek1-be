@@ -96,7 +96,6 @@ class BookService(
         val validator = ValidatorHelper(request.toMap())
         validator.required("title",       "Judul buku tidak boleh kosong")
         validator.required("author",      "Penulis tidak boleh kosong")
-        validator.required("description", "Deskripsi tidak boleh kosong")
         validator.validate()
 
         val bookId = bookRepo.create(request.toEntity())
@@ -117,7 +116,6 @@ class BookService(
         val validator = ValidatorHelper(request.toMap())
         validator.required("title",       "Judul buku tidak boleh kosong")
         validator.required("author",      "Penulis tidak boleh kosong")
-        validator.required("description", "Deskripsi tidak boleh kosong")
         validator.validate()
 
         val old = bookRepo.getById(bookId)
