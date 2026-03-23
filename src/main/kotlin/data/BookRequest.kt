@@ -41,6 +41,6 @@ data class BookRequest(
         year        = year,
         cover       = cover,
         isRead      = isRead,
-        updatedAt   = Clock.System.now().toString()  // ← toString()
+        updatedAt   = Clock.System.now()  // ✅ hapus .toString()
     )
 }
